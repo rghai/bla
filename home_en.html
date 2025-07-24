@@ -76,7 +76,17 @@ function OptanonWrapper() { }
     </noscript></head>
 <body><nav id=menu data-menu-name=Menu class="d-lg-none mm-menu mm-menu_offcanvas mm-menu_position-right sf-hidden" aria-hidden=true><div class="mm-panels sf-hidden"><div id=mm-1 class="mm-panel mm-panel_has-navbar mm-panel_opened sf-hidden"><ul class="mm-listview sf-hidden">
  
- 
+ <div id="root"></div>
+    <script type="module">
+        import AiriaChat from "https://chat.airia.ai/api/get-chat-embed"
+        AiriaChat.init({pipelineId: "c3dd9c03-c0d8-43ef-9731-d633a13296a6",
+                        apiKey: "ak-MTg3NDY2MzcxN3wxNzUzMzM5OTc3OTI3fFJlc2hhcGUgQ29uc3VsdGluZy18MXwxNjU2MjM5ODc3",
+                        apiUrl: "https://embed-api.airia.ai",
+                        greeting: "Hello! How can I assist you today?",
+                        imagePath: "https://yoursite.com/assets/chatbot-icon.png",
+                        imageSize: "small",
+                        imageBgColor: "#FFFFFF"})
+    </script>
  
  
  
