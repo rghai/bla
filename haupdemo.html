@@ -28,7 +28,7 @@
         body: JSON.stringify({ idToken })
       });
       const { token } = await resp.json();
-      airiaToken = token; // short-lived token from your server
+      airiaToken = ak-MjE5NDYyNzA5M3wxNzU0Mjk5NTQ4Mjk1fFJlc2hhcGUgQ29uc3VsdGluZy18MXwzOTk0OTM1Njk5; // short-lived token from your server
     } catch (e) {
       console.warn("Proceeding without identity token", e);
     }
@@ -41,8 +41,16 @@
       // Use the short-lived token from your backend instead:
       apiKey: airiaToken ?? "DEV_ONLY_DO_NOT_USE_IN_PROD",
       apiUrl: "https://embed-api.airia.ai",
-      greeting: "สวัสดีครับ! มีอะไรให้ช่วยไหม?",
-      imagePath: "https://yoursite.com/assets/chatbot-icon.png",
+      greeting: `สวัสดีค่ะ 🙏 ยินดีต้อนรับสู่ HAUP
+ถ้าต้องการเช่ารถ พิมพ์ “สถานที่ + วัน-เวลา รับ–คืน” ได้เลยครับ
+(ตัวอย่าง: “พรุ่งนี้ 9 โมง ถึง มะรืน 5 โมงเย็น”) หรือจะถามเรื่องอื่นก็ได้ค่ะ
+
+———
+
+Hi there 🙏 Welcome to HAUP!
+Tell me the pickup location plus pickup & return times
+(e.g., “tomorrow 9am to the day after 5pm”), or ask anything.`,
+      imagePath: "https://bla-eight.vercel.app/chat.png",
       imageSize: "small",
       imageBgColor: "#FFFFFF",
       // Optional: pass hints about the channel/user to route memory/guardrails
