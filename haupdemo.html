@@ -6,44 +6,63 @@
   <title>Chat with Haup Agent</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    html, body, #root { height: 100%; margin: 0; }
+    html, body, #root {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* avoid scroll bounce in LIFF */
+      background: #ffffff;
+    }
+    /* If the embed uses an internal container, ensure it can grow */
+    #root > * {
+      height: 100%;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="module">
-    // 1) Initialize LIFF (replace with your LIFF ID)
+    // 1) Initialize LIFF (your actual LIFF ID is already set)
     const LIFF_ID = "2007996531-3kn09jnp";
-    await liff.init({ liffId: LIFF_ID });
+    await liff.init({ liffId: LIFF_ID }).catch(console.error);
+    // Optional: If this page can open outside LINE, you can force login:
+    // if (!liff.isLoggedIn()) liff.login({ redirectUri: location.href });
 
-    // 2) Optionally identify the LINE user to Airia (nice for per-user memory)
-    // You can send the LINE userId / ID token to your backend to fetch a short Airia token.
+    // 2) (Recommended) Exchange a short-lived Airia token server-side
     let airiaToken = null;
     try {
-      const idToken = liff.getIDToken(); // or use liff.getProfile() for userId display only
+      const idToken = liff.getIDToken(); // or fetch liff.getProfile() if you prefer
       const resp = await fetch("/airia-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken })
       });
       const { token } = await resp.json();
-      airiaToken = ak-MjE5NDYyNzA5M3wxNzU0Mjk5NTQ4Mjk1fFJlc2hhcGUgQ29uc3VsdGluZy18MXwzOTk0OTM1Njk5; // short-lived token from your server
+      airiaToken = token; // short-lived token from your server
     } catch (e) {
       console.warn("Proceeding without identity token", e);
     }
 
-    // 3) Load Airia embed
-    const AiriaChat = (await import("https://chat.airia.ai/api/get-chat-embed")).default;
-    AiriaChat.init({
+    // 3) Load Airia embed in FULLSCREEN (inline) mode
+    const AiriaChatMod = await import("https://chat.airia.ai/api/get-chat-embed");
+    const AiriaChat = AiriaChatMod.default ?? AiriaChatMod;
+
+    const options = {
       pipelineId: "1c709ab4-afaa-46a3-b09f-43893308fabd",
-      // DO NOT ship your long-lived API key to clients in production.
-      // Use the short-lived token from your backend instead:
+      // Never ship long-lived keys in the client. Use short-lived tokens instead.
       apiKey: airiaToken ?? "DEV_ONLY_DO_NOT_USE_IN_PROD",
       apiUrl: "https://embed-api.airia.ai",
-      greeting: `สวัสดีค่ะ 🙏 ยินดีต้อนรับสู่ HAUP
+
+      // Inline + fullscreen
+      mode: "embed",           // 👈 force inline (instead of floating icon)
+      containerId: "root",     // 👈 render directly into #root
+
+      greeting: `สวัสดีครับ 🙏 ยินดีต้อนรับสู่ HAUP
 ถ้าต้องการเช่ารถ พิมพ์ “สถานที่ + วัน-เวลา รับ–คืน” ได้เลยครับ
-(ตัวอย่าง: “พรุ่งนี้ 9 โมง ถึง มะรืน 5 โมงเย็น”) หรือจะถามเรื่องอื่นก็ได้ค่ะ
+(ตัวอย่าง: “พรุ่งนี้ 9 โมง ถึง มะรืน 5 โมงเย็น”) หรือจะถามเรื่องอื่นก็ได้ครับ
 
 ———
 
@@ -53,12 +72,31 @@ Tell me the pickup location plus pickup & return times
       imagePath: "https://bla-eight.vercel.app/chat.png",
       imageSize: "small",
       imageBgColor: "#FFFFFF",
-      // Optional: pass hints about the channel/user to route memory/guardrails
+
+      // Pass LINE context to your agent (useful for routing/memory)
       metadata: {
         channel: "LINE",
         liffUser: liff.isLoggedIn() ? "yes" : "no"
       }
-    });
+    };
+
+    // Initialize
+    const api = AiriaChat.init(options);
+
+    // 4) Fallbacks to ensure it opens immediately even if the SDK defaults to a launcher
+    //    (They'll be no-ops if not supported.)
+    try {
+      // Some builds expose an "open" method—use it if present.
+      if (typeof api?.open === "function") api.open();
+
+      // If the library still renders a launcher, try auto-clicking it after mount.
+      setTimeout(() => {
+        const launcher = document.querySelector('[data-airia-launcher], .airia-launcher, button[aria-label="Open chat"]');
+        if (launcher) launcher.click();
+      }, 800);
+    } catch (e) {
+      console.debug("Auto-open fallback not needed or not supported.", e);
+    }
   </script>
 </body>
 </html>
