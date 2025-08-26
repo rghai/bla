@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat with Haup Agent</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    html, body, #root { height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    // 1) Initialize LIFF (replace with your LIFF ID)
+    const LIFF_ID = "YOUR_LIFF_ID";
+    await liff.init({ liffId: LIFF_ID });
+
+    // 2) Optionally identify the LINE user to Airia (nice for per-user memory)
+    // You can send the LINE userId / ID token to your backend to fetch a short Airia token.
+    let airiaToken = null;
+    try {
+      const idToken = liff.getIDToken(); // or use liff.getProfile() for userId display only
+      const resp = await fetch("/airia-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken })
+      });
+      const { token } = await resp.json();
+      airiaToken = token; // short-lived token from your server
+    } catch (e) {
+      console.warn("Proceeding without identity token", e);
+    }
+
+    // 3) Load Airia embed
+    const AiriaChat = (await import("https://chat.airia.ai/api/get-chat-embed")).default;
+    AiriaChat.init({
+      pipelineId: "1c709ab4-afaa-46a3-b09f-43893308fabd",
+      // DO NOT ship your long-lived API key to clients in production.
+      // Use the short-lived token from your backend instead:
+      apiKey: airiaToken ?? "DEV_ONLY_DO_NOT_USE_IN_PROD",
+      apiUrl: "https://embed-api.airia.ai",
+      greeting: "สวัสดีครับ! มีอะไรให้ช่วยไหม?",
+      imagePath: "https://yoursite.com/assets/chatbot-icon.png",
+      imageSize: "small",
+      imageBgColor: "#FFFFFF",
+      // Optional: pass hints about the channel/user to route memory/guardrails
+      metadata: {
+        channel: "LINE",
+        liffUser: liff.isLoggedIn() ? "yes" : "no"
+      }
+    });
+  </script>
+</body>
+</html>
